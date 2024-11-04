@@ -1,0 +1,157 @@
+INTRODUCTION TO DJANGO
+DRY - don't repeat yourself
+Main Characteristics of Django
+1. High-level Framework
+2. Batteries included philosophy
+3. MVT (MOdel View Template) Architecture. Variant of MVC (Model-View-Controller)
+4. DRY Architecture
+5. Built in security
+6. Fully featured admin interface
+7. Open Source
+
+Core Components of Django
+1. Models - Define structure of db. Each model is represented by a class in Py and translates almost seamlessly into db tables
+2. Views - Control what users see. Retrieves data from the appropriate model and passes it to a template
+3. Templates - Template contains the static parts of the desired HTML output as well as some special syntal describing how dynamic content will be inserted
+4. URLs - URL dispatchers handle page requests and serve the appropriate view based on the requested URL
+5. Admin - auto generated web interface for py models that provides a visual representation of your db
+6. Forms - Tools for generating and processing forms in a way that is secure and tied to models
+7. Authentication - System for handling user accounts, groups, permissions and cookie based user sessions 
+ORM(Object-Relational Mapper) - Allows devs to interact with their db like set of py objects making db manipulation intuitive and hassle free
+
+Other Web Frameworks
+1. Flask (Python) - light weight and minimalistic, more flexible and allows devs to choose the tools and libraries they need. However there's need to configure and set up many components manually
+2. FastAPI (Py) - modern, fast and high-performance webframework for building APIs with python. Designed specifically for building APIs and provide automatic data validation and serialization out of the box
+3. Ruby on Rails (Ruby) - Full-stack web framework, follows Model-View-Controller(MVC) architecture pattern and emphasizes convention over configuration.
+4. Express.js (Node.js) - Minimal and flexible, light weight and modular allowing devs to include only required components but requires manual configuration
+5. Laravel (PHP) elegant and dev-friendly, follows MVC pattern and provides comprehensive set of tools and libraries
+6. ASP.NET (C#) developed by microsoft for building web applications using .NET framework, requires more manual configurations and provides more modular and extensible architecture. Praised for its performance and integration with other microsoft technologies
+7. Spring Boot (Java) - light weight and modular, allows developers to include only the required components for their application, more manual configuration and set up
+
+Installing Django
+- pip install django
+
+Creating a new Project
+- Django provides a cmd utility called django-admin to create a new project
+- Navigate to directory where you want to create project and execute the command:
+django-admin startproject <project_name>
+
+Project structure
+- project is created with the following files and directories:
+1. project_name/ - root directory of project
+2. manage.py - command line utility for managing Django project
+3. mysite/ - py package with project specific settings and configurations
+4. __init__.py - empty file that tells py that that this directory should be considered a py package
+5. settings.py - contains project settings and configurations, e.g db settings, installed apps, static file settings
+6. urls.py - defines url patterns for the project and maps them to appropriate Views
+7. asgi.py - entry point for ASGI - compatible web servers to serve the project
+8. wsgi.py - entry point for WSGI - compatible webservers to serve the project
+
+Running a Django Project
+- After setting up a new django project you'll need to run the development server to see your aplication in action.
+- Navigate to the root directory of your Django project (Directory containing manage.py) Run the following command: python manage.py runserver
+
+- Development server is designed for local development and testing purposes only and should not be used in a production environment
+
+Django apps
+- A project and an app are related but distinct concepts
+- A Django project is a collection of setings and configutations for a particular Django web application
+ It acts as a container for one or more Django apps
+ It defines the db settings, installed aps, middleware, templates and other project level configurations
+
+- An app is a self contained, reusable module that represents a specific functionality or feature of your web application
+- A Django project can have multiple apps, each responsible for a specific aspect of the application
+- Apps contain models (db schemas), views (Handling HTTP requests and responses), templates (HTML files) and other app specific files
+
+Creating Django Apps
+commad:
+- python manage.py startapp <app_name>
+
+- the following files are generated within the app directory
+1. admin.py - used to register models with Django admin interface providing a user friendly way to manage applications data through a web interface
+2. apps.py - defines the configuration and metadata for the app. Contains Config class that inherits from django.apps. AppConfig includes metadata such as app name and label
+3. migrations/ - created the first time you run migrations for your app. Stores migration files that keep track of changes to models, allowing you to evolve your db schema over time
+4. models.py - where you define your data models, represents the db table for your application. Models are defined as py classes that inherit from django.db.models.Model
+5. tests.py - used to write unit tests for app's models, views, and other components. Django provides a built in testing framework to help write and run tests
+6. views.py - contains the view functions that handle HTTP requests and return HTTP responses. Views are responsible for processing user input, interacting with models and rendering templates
+
+Models and their structure
+- Models are defined as python classes that inherit from the django.db.models.Model base class
+- Each attribute of the model represents a db field, and typr defined using field classes provided by Django (e.g. CharField, IntegerField, DateField, etc)
+- Most common fields:
+1. CharField - stores text-based data with a limited number of characters. Takes a max_legth parameter that specifies the maximum legnth of the string
+2. TextField - stores a large amount of text without any legth restriction
+3. FloatField - stores floating point numbers
+4. DecimalField - stores precise decimal values, often used for monetary values
+5. BooleanField - Stores boolean values
+6. DateField - store date values
+7. EmailField - subclass of CharField, stores email adresses. Provides basic validation for email formats
+
+Django ORM: Object-Relational Mapping
+- provides an abstraction layer that allows developers to interact with the db using py code instead of writing raw SQL queries.
+- Automatically handles tasks like creating db tables based on model definitions, performing db migrations, and executing crud operations.
+- Benefits of using Django ORM:
+1. Db abstraction - devs can work with py objects instead of writing SQL queries directly
+2. Portability - Supports multiple db engines(SQLite, PostgreSQL, MySQL, Oracle) with minimal code changes
+3. Db Schema - Automatic handling of db schema changes through migrations
+4. Powerful Queries - Supports powerful querying capabilities with Pythonic syntax
+
+Db Interaction with the Django ORM
+- The ORM provides a rich query API that allows devs to retrieve, filter, and manipulate data in the db using py code.
+- Suports complex quries, including joins, aggregations, and annotations, making it poerful for working with relational describing
+
+Configuring the Db
+- SQL lite, a lightweight file-based db is used by Django for dev environments
+- Configuring the db settings in Django involves modifying the DATABASES setting in the settings.py file
+eg:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', # db engine to use(MySQL for this case)
+        'NAME': 'mydatabase', # name of the db
+        'USER': 'mydatabaseuser', # username to connect to the db
+        'PASSWORD': 'mypassword', # password for the db user
+        'HOST': 'localhost', # hostname or IP address for the db server
+        'PORT': '3306' # port number of the db server
+    }
+}
+
+- pip install mysqlclient to install appropriate db driver for MySQL
+- once db is configured Django automatically creates the necessary tables based on model definitions when you run migrate command
+
+Configuring the admin interface
+- Steps:
+1. run 'python manage.py make migrations' and 'python manage.py migrate' to make sure you do not have any unmigrated changes
+2. run 'python manage.py createsuperuser' to create an admin user account. Provide username, email(optional) and password
+3. Register models with the admin interface by adding them to the admin.py file in your app
+4. Customize behaviour and appearance of Admin interface
+
+- run ap using `python manage.py runserver` and visit `http://localhost:8000/admin`
+
+Registering models
+- Add models to `[admin.py](http://admin.py)` file to register them
+- Example of registering a book model
+
+from django.contrib import admin
+from .models import Book
+
+admin.site.register(Book)
+
+Customizing the Admin interface
+- You can customize the appearance and behaviour of the Admin interface for each registed model by defining custom ModelAdmin classes
+- Common customizations:
+1. Defining list displays to control which fields are displayed in the list view
+2. Adding search functionality and filtering options
+3. Customizing form layouts and field ordering
+4. Adding custom views, actions and filters
+5. Integrating third-party libraries for advance functionalities
+
+Example of a custom BookAdmin that customizes the list display and adds a search functionality
+
+from django.contrib import admin
+from .models import Book
+
+class BookAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'published_date')
+    search_fields = ('title', 'author')
+
+admin.site.register(Book, BookAdmin)
