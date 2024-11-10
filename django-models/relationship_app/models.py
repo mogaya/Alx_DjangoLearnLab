@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-class Author(models.Model):
+class author(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -9,7 +9,7 @@ class Author(models.Model):
     
 class Book(models.Model):
     title = models.CharField(max_length=200)
-    Author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='books')
+    author = models.ForeignKey(author, on_delete=models.CASCADE, related_name='books')
 
     def __str__(self):
         return self.title
