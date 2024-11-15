@@ -1,6 +1,7 @@
 from typing import Any
 from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
+from django.contrib.auth import login
 
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.forms import UserCreationForm
@@ -46,6 +47,7 @@ class RegisterView(View):
     def post(self, request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            login(request, user)
             return redirect('login')
         return render(request, 'relationship_app/register.html', {'form': form})
