@@ -1,0 +1,187 @@
+!! Advanced Features and Security
+
+! Custom User Models and Authentication
+
+Approaches to Customization
+x 1. AbstractBaseUser
+- Necessitates implementing core methods like `get_username()` and `get_full_name()`
+
+# CODE
+from django.contrib.auth.models import AbstractBaseUser
+
+class CustomUser(AbstractBaseUser):
+    email = models.EmailField(unique=True)
+    phone_number = models.CharField(max_length=20)
+    # ... additional fields and methods as required ...
+
+x 2. AbstractUser
+- Extends the existing user model while preserving default fields and functionalities
+- Suitable for scenarios where you need to add a few extra fields without altering the core model structure
+
+# CODE
+from django.contrib.auth.models import AbstractUser
+
+class CustomUser(AbstractUser):
+    bio = models.TextField(blank=True)
+    # ... additional fields as needed ...
+
+x Essential Considerations
+- `AUTH_USER_MODEL` Configuration: In `settings.py` file ensure you set the `AUTH_USER_MODEL` variable to point to your newly created custom user model, informing Django about the model to utilize for user management
+- Method Implementation: Implement the necessary methods and manager classes to ensure proper user management functionality
+
+
+! Crafting Custom Authentication Backends
+
+Steps to Implementation
+x 1. Define a Custom Backend Class
+- Create a class that inherits from `BaseBackend` and Implement the `authenticate()` and `get_user()` methods. These methods define how user authentication and retrieval are handled
+
+# CODE
+from django.contrib.auth.backends import BaseBackend
+
+class EmailBackend(BaseBackend):
+    def authenticate(self, request, username=None, password=None):
+        # Implement logic to authenticate user email and password
+        # ...
+
+    def get_user(self, user_id):
+        # Implement logic to retrieve user based user ID
+        # ...
+
+x 2. Register the Custom Backend
+- In `settings.py` file, add the path to your custom backend class within the `AUTHENTICATION_BACKENDS` setting, informing Django about the available authentication methods
+
+# CODE
+AUTHENTICATION_BACKENDS = [
+    'path.to.EmailBackend', # Your custom backend
+    'django.contrib.auth.backends.ModelBackend', # Keep the default backend as a fallback
+]
+
+! additional resources
+- Django Custom User Model Documentation ~ https://intranet.alxswe.com/rltoken/ett-FApY6-NN0yXwZ0qnWw
+- Django Authentication Backends ~ https://intranet.alxswe.com/rltoken/jrlgYEoefTeld6cDZKqbIQ
+
+
+!! Permissions and Authorization
+- Permissions and authorization are fundamental aspects of web app security, allow you to control which users can access specific resources or perform certain actions within your Django app
+
+x Permissions:
+- Fine-grained access controls that define specific actions a user can perform, such as "can add post," "can change user," or "can delete comment."
+- Django provides a set of built-in permissions for common actions related to models
+
+x Groups:
+- Allow you to categorize users and assign permissions to the entire group at once, simplifying permission management, especially when dealing with many users
+
+! Assigning Permissions
+
+x 1. Django Admin
+- Provides a user friendly way to manage permissions. You can assign permissions to individual users or groups directly from the admin panel
+
+x 2. Programmatically
+- Permissions can also be assigned programmatically using the `user.user_permissions.add()` and `group.permissions.add()` methods
+- Useful for automating permission assignments or integrating with custom user registration processes
+
+# CODE
+from django.contrib.auth.models import Permissions
+
+# Get the permission
+permission = Permission.objects.get(codename='add_post')
+
+# Assign permission to a user
+user.user_permissions.add(permission)
+
+# Assign permission to a group
+group.permissions.add(permission)
+
+! Permission Checks in Views and Templates
+
+x Views
+- `user.has_perm()` method checks is a user has a specific permission in a Views
+- Allows you to control which parts of the view logic are executed based on the user's permissions
+
+# CODE
+def my_view(request):
+    if request.user.has_perm('app_name.add_post'):
+        # Allow user to create a new post
+        ...
+    else:
+        # Deny access or show an error message
+        ...
+
+x Templates
+- Django's template system provides the {% if perms %} tag to conditionally render content based on the user's permissions
+
+# CODE
+{% if perms.app_name.add_post %}
+    <a href="{% url 'create_post' %}">Create New Post</a>
+{% endif %}
+
+! Custom Permissions
+- Custom permissions can be created by defining them in models
+
+# CODE
+class Post(models.Model):
+    # ... other fields ...
+    class Meta:
+        permissions = [
+            ("can_publish_post", "Can publish post")
+        ]
+
+- This creates a new permission called "canpublishpost" which you can then assign to users or groups
+
+! Additional resources
+- Django Permissions Documentation - https://intranet.alxswe.com/rltoken/VkBgLyvjvUVC2fByg9ECYw
+- Django Groups Documentation - https://intranet.alxswe.com/rltoken/8CUFiOq155V8qysRZxRiLQ
+
+
+!! Security Practices in Django
+! Common Web Vulnerabilities and their Impact
+
+x Cross-Site Scripting (XSS)
+- Attackers inject malicious scripts into web pages viewed by users which can steal sensitive data like cookies or login credentials, deface websites or redirect users to phishing sites
+
+x Cross-Site Request Forgery (CSRF)
+- Malicious actors trick users into performing actions on a trusted website without their knowledge or consent which can lead to unauthorized fund transfers, data modification or account take over
+
+x SQL Injection
+- Attackers manipulate db queries to gain unauthorized access to sensitive data, modify data or even delete entire dbs
+
+x Clickjacking
+- Users are deceived into clicking elements on a web page while hidden elements perform unintended actions on the background
+
+
+! Leveraging Django's Built-in Security Features
+
+x CSRF Protection
+- Django's CSRF middleware automatically generates and validates tokens for forms. This ensures that only forms originating from your own website can submit data preventing CSRF Attackers
+
+x XSS Protection
+- Django templates automatically escape user-provided data by default. This process converts special characters into harmless entites preventing malicious scripts from being executedin the browser
+
+x SQL injection Protection
+- Django's querysets and ORM(Object-Relational-Mapping) provide a secure way to interact with db. They use parametization to ensure that user input is treated as data, not executable code, preventing SQL injection attacks
+
+x Password Hashing
+- Django stores passwords securely using robust Hashing algorithms like PBKDF2 or Argon2, making it hard for attackers to crack passwords even if they gain access to the hashed password data
+
+
+! implementing Secure Development Practices
+
+x Validate user Input
+- Validate and sanitize user input to avoid malicious data from entering application. Includes checking for data type, length, format and allowed characters
+
+x Use Parameterized queries
+- Avoid using raw SQL queries that concatenate user input directly into the query string. Instead, use Django's ORM or Parameterized queries which separate data from code and prevent SQL injection
+
+x Keep Dependancies updated
+- This ensures benefit from latest security patches and bug fixes
+
+x Use HTTPS
+- Encrpts communication btwn server and client protecting sensitive data transmitted over the network from eavesdropping and man in the middle attacks
+
+x Principle of Least Privilege
+- Grant users the minimum level of access necessary to perform their tasks. This limits the potential damage incase of compromised accounts
+
+! Additional resources
+- Django Security Documentation - https://intranet.alxswe.com/rltoken/putNWUiu4vGYdM3A4GQIPw
+- OWASP Top 10 Web Application Security Risks - https://intranet.alxswe.com/rltoken/UPzX60dl1a6kTfdKIdIb0g

@@ -1,0 +1,456 @@
+Advanced Model Relationships
+- ForeignKey, ManyToManyField, OneToOneField
+
+ForeignKey Relationships
+- Represents a one-to-many relationship between two models
+- Allows association of a record from one model with a single record from another model
+
+# CODE
+from django.db import models
+
+class Category(models.Model):
+    name = models.CharField(max_length=10)
+
+class Product(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+
+- Each Product instance is associated with a single Category instance, while each Category can have multiple Product instances
+
+OneToOneField Relationships
+- Ensures a record from one model is associated with at most one record from another model, and vise versa.
+
+# CODE
+from django.db import models
+
+class User(models.Model):
+    username = models.CharField(max_length=100)
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    bio = models.TextField()
+
+- Each user instance can have at most one Profile instance associated with it, and each Profile instance is associated with a single User instance
+
+ManyToManyField Relationships
+- Allows association of multiple records from one model with multiple records from another model.
+
+# CODE
+from django.db import models
+
+class Student(models.Model):
+    name = models.CharField(max_length=100)
+
+class Course(models.Model):
+    name = models.CharField(max_length=100)
+    students = models.ManyToManyField(Student, related_name='courses')
+
+
+Handling Related Object Deletion
+- CASCADE (Deleting related objects automatically)
+- PROTECT (Preventing deletion if related objects exist)
+- SET_NULL (Seting related field to NULL)
+- SET_DEFAULT (Setting the related field to default value)
+
+
+Performance Considerations
+- As data models becoome more complex, with multiple relationships and nested queries, performance can become a concern.
+- Django provides several tools and techniques to optimize queries involving related object, such as: prefetching and select_related.
+- Proper indexing and db optimization can significantly improve query performance
+
+# CODE
+from django.db import models
+
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+
+class Product(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+
+# Optimizing queries with prefetching
+products = Product.objects.prefetch_related('category')
+
+Django Views and URL Configuration
+- Types of views in djanho: Function based views and class based views
+- Views are Py functions or classes thatreceive HTTP requests, process the data and return HTTP responses
+- Django's URL configuration system allows you to define URL patterns and maps them to the corresponding views
+
+Function-based Views
+- Traditional way of defining views in django.
+- Python funcs that take HTTP request as the first argument and return HTTP response.
+
+# CODE
+from django.http import HttpResponse
+
+def hello_view(request):
+    ""Basic func view returming a greeting"
+    return HttpResponse("Hello World")
+
+# CODE 1
+from django.shortcuts import render
+from .models import Book
+
+def book_list(request):
+    ""Retrieves all books and renders a template displaying the list ""
+
+    book = Book.objects.all() # Fetch all book instances from the db
+
+    context = {'book_list': books} # Create a context dictionary with book list
+
+    return render(request, 'books/book_list.html', context)
+
+
+Class-based Views
+- Alternative approach to defining views in Py
+- Are Py classes that inherit from Django's built-in view classes
+- Provide a more structured and reusable way of handling HTTP requests
+- Promote code reusability, support mixins for shared behaviour, and offer better organization and separation of concerns
+
+# CODE
+from django.views.generic import TemplateView
+
+class HelloView(TemplateView):
+    """A class-based view rendering a template named 'hello.html'."""
+    template_name = 'hello.html'
+
+- Class-based views can inherit from various built-in view classes offered by Django including ListView, DetailView, CreateView ...etc
+
+Examples on class based Views
+
+Example1
+- A `BookDetailView` that inherits from DetailView and displays details of a specific book.
+- It overrides the get_context_data method to inject additional context data relevant to the book
+
+# CODE
+from django.views.generic import DetailView
+from .models import Book
+
+class BookDetailView(DetailView):
+    """A class-based view for displaying details of a specific book."""
+    model = Book
+    template_name = 'books/book_detail.html'
+
+    def get_context_data(self, **kwargs):
+        """Injects additional context data specific to the book"""
+        context = super().get_context_data(**kwargs) # gets the default context data
+
+        book = self.get_object() # Retrieves the current book instance
+        context['average_rating'] = book.get_average_rating()
+
+
+Example2
+- A `BookUpdateView` that inherits from UpdateView and facilitates updating of a book.
+- Defines the editable fields (title, author and description) and the template used for the update form (book_update_form.html)
+- Sets the `success_url` to redirect the user to the book list view (book_list) after successful update
+- Overrides the `form_valid` method to potentially execute custom logic after the form is validated (e.g sending notifications)
+
+# CODE
+from django.views.gneric import DetailView, UpdateView
+from django.urls import reverse_lazy
+from .models import Book
+
+class BookUpdateView(UpdateView):
+    """A class-based view for updating details of a specific book."""
+    model = Book
+    fields = ['title', 'author', 'description'] # Specify fields to be editable
+    template_name = 'books/book_update_form.html'
+    success_url = reverse_lazy('book_list') # URL to redirect after successful update
+
+    def form_valid(self, form):
+        """Executes custom logic after form validation"""
+        response = super().form_valid(form) # Call default form validation
+        # Perform additional actions after successful update (e.g send notifications)
+        return response
+
+
+URL Configuration
+- Allows you to define URL patterns and map them to corresponding views.
+- URL patterns can include parameters and regular expressions to match URL structures
+- `urls.py` file in your Django project and apps is where you define these URL patterns  and associate them with appropriate views
+
+# CODE
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('hello', views.hello_view, name='hello')
+    path('about/, views.AboutView.as_view(), name='about'),
+]
+
+Template and Static Content Management
+- Templates are text files that define the structure and presentation od data for web pages
+- Separate presentation logic from application logic
+
+Template Language
+- Templates access and display data passed from views using variable interpolation({{ variable}}) and can execute loops and conditional statements using template tags ({% tag %})
+- Tags such as {% for %}, {% if %} and {% include %} allow for control flow and template inclusion, while filters like {{ value|date }} and {{ value|truncatechars:30}} modify the display data
+
+# CODE
+<!-- book_list.html -->
+<h1>Book List</h1>
+<ul>
+{% for book in book_list %}
+    <li>{{book.title}} by {{book.author}}</li>
+{% endfor %}
+</ul>
+
+Template Inheritance
+- Allows creation of a base template with common elements and extent it with child templates for specific pages, promoting code reuse and consistency across web applications
+
+# CODE
+<!-- base.html -->
+<html>
+    <head>
+        <title>{% block title%}My Site{% endblock %}</title>
+    </head>
+    <body>
+        {% block content %}{% endblock %}
+    </body>
+</html>
+
+<!-- book_list.html -->
+{% extends 'base.html' %}
+{% block title %}Book List{% endblock %}
+{% block content %}
+    <h1>Book List</h1>
+    <ul>
+        {% for book in book_list %}
+            <li>{{book.title}} by {{book.author}}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+Template Tags and filters
+- There is a rich set of built in template tags and filters for common tasks like looping, conditional rendering, URLgeneration and string formatting
+- Custom template tags and filters can also be created
+
+<a href="{% url 'book-detail' book.id %}">{{book.title|truncatechars:30}}</a>
+
+Static Files Management
+- Build in tools for managing static files such as CSS, JavaScript and images exist.
+- Static files are stored in static directory with Django apps and are served directly by the web server in production for improved performance
+
+# CODE
+<!-- base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title%}My Site{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Content -->
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+
+# {% static %} template tag is used to include static files like CSS and JavaScript in the HTML template.
+
+!! USER AUTHENTICATION BASICS
+- Built-in authentication system, user registration, login and logout functionalities, user permissions and groups
+
+x Django's Built-in Authentication System
+- Provides a set of models, views, and utilities for handling user authentication
+- Core Components:
+
+1. User Model
+- Serves as foundation for representing a user within the authentication system
+- Stores essential user information such as username, password(hashed), email address and other relevant user-related information
+
+# CODE
+from django.contrib.auth.models import User
+
+# Create a new user
+user = User.objects.create_user('john', 'john@example.com', 'password123')
+
+# Retrieve a user based on username
+user = User.objects.get(username='john')
+
+2. Authentication Middleware
+- Seamlessly associates users with incomiing request and grants access to authenticated user within views and templates
+
+3. Authentication Backends
+- Handle the process of verifying user credentials 
+
+
+x User registration
+- Django provides `UserCreationForm` form and the `CreateView` class-based view to handle user registration
+
+# CODE
+from django.contrib.auth.forms import UserCreationForm
+from django.urls import reverse_lazy
+from django.views.generic import CreateView
+
+class SignUpView(CreateView):
+    form_class = UserCreationForm
+    success_url = reverse_lazy('login')
+    template_name = 'registration/signup.html'
+
+x User Login and logout
+
+# CODE
+- user login
+
+from django.contrib.auth.views import LoginView
+from django.urls import path
+
+urlpatterns = [
+    path('login/', LoginView.as_view(template_name = 'registration/login.html'), name='login')
+]
+
+# `LoginView` a class-based view is used to handle user login. `template_name` attribute specifies the template to be rendered for the login form
+
+
+- user logout
+
+from django.contrib.auth.views import LogoutView
+from django.urls import path
+
+urlpatterns = [
+    path('logout/', LogoutView.as_view(), name='logout'),
+]
+
+# `LogoutView` class-based view is used to handle user logout, when a user logs out they are directed to the default URL specified by the LOGIN_REDIRECT_URL setting
+
+! Customizing Authentication Views
+- can be customized by overriding their attributes or providing custom templates that align with specific application design aesthetics
+- `login_required` decorator or the `PermissionRequiredMixin` can be used to restrict access to specific views or functionalities based on user permissions or group memberships
+
+# CODE
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def profile_view(request):
+    # This view can only be accesed by authenticated users
+    return render(request, 'profile.html')
+
+! Password Management
+- Features
+1. Password hashing - Django automatically hashes user passwords using the PBKDF2 algorith before storing them in the db
+
+2. Password Reset - Django provides built-in views and utilities for handling password rest functionalities. Users can request a password reset and Django will send them an email with a link to reset their password
+
+3. Password Validaors - django has built in pswd validators that enforce pswd policies
+
+# CODE
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSmilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 9,
+        }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+! Authentication Views and URLs
+- built-in views and URLs related to user authentication; login, logout, password reset and password change views
+
+- login and logout views
+# CODE
+pythonCopy codefrom django.contrib.auth.views import LoginView, LogoutView 
+from django.urls import path
+
+urlpatterns = [
+    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+]
+
+- password reset views
+# CODE
+pythonCopy codefrom django.contrib.auth import views as auth_views
+from django.urls import path
+
+urlpatterns = [
+    path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
+    path('password_reset/done/', auth_views.PaswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
+]
+
+- password change view
+pythonCopy codefrom django.contrib.auth import views as auth_views
+from django.urls import path
+
+urlpatterns = [
+    path('password_change/', auth.views.PasswordChangeView.as_view(), name='password_change'),
+    path('password_change/done/' auth_views.PasswordChangeDoneView.as_view(), name='password_change_done')
+]
+
+!! Full Example
+! Step 1. Enable Django Auth App
+- Ensure `django.contrib.auth` and `django.contrib.contenttypes` apps are in the list of installed apps, if not ad them.
+
+# CODE
+# open `[settings.py](http://settings.py)` and update `INSTALLED_APPS`
+
+INSTALLED_APPS = [
+    ...
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    ...
+]
+
+# Make sure the following middlewares are present
+MIDDLEWARE = [
+    ...
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    ...
+]
+
+! Step 2. Setting up urls & Redirects
+- In `[urls.py](https://urls.py)` file ad the required accounts urls
+
+# CODE
+from django.urls import path, include
+
+urlpatterns = [
+    ...
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/profile/', TemplateView.as_view(template_name='accounts/profilr.html'), name='profile'),
+    path('signup/', SignUpView.as_view(), name='templates/registration/signup'),
+    ...
+]
+
+# Here the `accounts` path whicj contains login, logout, appsword change... etc routes except sign up and profile routes is set
+# update the redirect constant variables to redirect to the profile page in `[settings.py](http://settings.py)`
+
+LOGIN_REDIRECT_URL = "/accounts/profile"
+LOGOUT_REDIRECT_URL = "/accounts/profile"
+
+! Step 3. Adding Template Files
+- create a `templates` folder at the root of the project and update the `TEMPLATES` constants in the `[settings.py](http://setings.py)`
+
+# CODE
+TEMPLATES = [
+    {
+        ...
+        'DIRS': [BASE_DIR / "templates"],
+        ...
+    },
+]
+
+! Template code
+- profile.html
+
+#CODE
+{% if user.is_authenticated %} You are logged in as {{user}}.
+<form action="{'% url 'logout' %}" method="post">
+    {% csrf_token %}
+    <button type="submit">Log Out</button>
+</form>
+{% else %} You are not logged in.
+<a href="{% url 'login' %}"> CLick here to login</a>
+
+- login.html
+{% if }
