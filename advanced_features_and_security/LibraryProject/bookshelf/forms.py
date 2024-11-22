@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import BookForm
 
-def add_book(request):
+def ExampleForm(request):
     if request.method == "POST":
         form = BookForm(request.POST)
         if form.is_valid():
