@@ -1,6 +1,6 @@
 from django.db import models
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Permission
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -10,6 +10,21 @@ class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=100)
     publication_year = models.IntegerField()
+
+#     Step 1: Define Custom Permissions in Models
+# Add custom permissions to one of your existing models (or a new model if preferable) to control actions such as viewing, creating, editing, or deleting instances of that model.
+
+# Model Permissions to Add:
+# Create permissions such as can_view, can_create, can_edit, and can_delete within your chosen model.
+
+    class Meta:
+        permissions = [
+            ("can_view", "Can view books"),
+            ("can_create", "Can create books"),
+            ("can_edit", "Can edit books"),
+            ("can_delete", "Can delete books"),
+        ]
+
 
     def __str__(self):
         return f"{self.title} by {self.author} ({self.publication_year})"
@@ -43,6 +58,8 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superuser must be staff")
         if extra_fields.get('is_superuser') is not True:
             raise ValueError("superuser must have superuser set to true")
+        
+        return self.create_user(username, email, password, **extra_fields)
 
 
 # Create a custom user model by extending AbstractUser, adding custom fields that are relevant to your application’s needs.
@@ -56,6 +73,18 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     date_of_birth = models.DateField(null=True, blank=True)
     profile_photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True)
+
+    groups = models.ManyToManyField(
+        Group,
+        related_name="customuser_groups",
+        blank=True,
+    )
+
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="customer_user_permissions",
+        blank=True,
+    )
 
     objects = CustomUserManager()
 
