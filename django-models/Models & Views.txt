@@ -71,9 +71,9 @@ class Product(models.Model):
 # Optimizing queries with prefetching
 products = Product.objects.prefetch_related('category')
 
-! Django Views and URL Configuration
-- Types of views in django: Function based views and class based views
-- Views are Py functions or classes that receive HTTP requests, process the data and return HTTP responses
+Django Views and URL Configuration
+- Types of views in djanho: Function based views and class based views
+- Views are Py functions or classes thatreceive HTTP requests, process the data and return HTTP responses
 - Django's URL configuration system allows you to define URL patterns and maps them to the corresponding views
 
 Function-based Views
@@ -94,7 +94,7 @@ from .models import Book
 def book_list(request):
     ""Retrieves all books and renders a template displaying the list ""
 
-    books = Book.objects.all() # Fetch all book instances from the db
+    book = Book.objects.all() # Fetch all book instances from the db
 
     context = {'book_list': books} # Create a context dictionary with book list
 
@@ -453,57 +453,4 @@ TEMPLATES = [
 <a href="{% url 'login' %}"> CLick here to login</a>
 
 - login.html
-{% if from.errors %}
-<p>Your username and password didn't match. Please try again</p>
-{% endif %}
-
-<form method="post" action={% url 'login %}>
-    {% csrf_token %} {{ form.as_p }}
-
-    <input type="submit" value="login" />
-</form>
-
-- signup.html
-{% block title %}Sign Up{% endblock %} {% block content %}
-<h2>Sign up</h2>
-<form method="post">
-    {% csrf_token %} {{ form }} 
-    <button type="submit">Sign Up</button>
-</form>
-{% endblock %}
-
-! Step 4. Adding Signup View
-- Can be added to existing app or to a dedicated app for handling accounts
-- In this case it is added to `myapp` app `[views.py](http://views.py)` file
-
-# CODE
-
-from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
-
-class SignUpView(CreateView):
-    form_class = UserCreationForm
-    success_url \= reverse_lazy("login")
-    template_name = "registration/signup.html"
-
-! Step 5. Migrating changes and running project
-
-# CODE
-
-python manage.py makemigrations
-python manage.py migrate
-python manage.py runserver
-
-!! Additional Resources
-Django Authentication System - https://intranet.alxswe.com/rltoken/XAWNr7D5_czw0c1GzwYAhg
-
-User Authentication in Django - https://intranet.alxswe.com/rltoken/yqWUDt-_e43cImYEigE29Q
-
-Authentication Views - https://intranet.alxswe.com/rltoken/by87HvEez21QiNIA-G-xYA
-
-Password Management - https://intranet.alxswe.com/rltoken/IdS2aM9iPBackWhNdBlaKA
-
-Permissions and Authorization - https://intranet.alxswe.com/rltoken/v9dbK629JDvnT1Qjejq53A
-
-Django Login, Logout, Signup, password change and password reset - https://intranet.alxswe.com/rltoken/1tajHMD96BFpiQhtynL5IQ
+{% if }
