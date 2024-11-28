@@ -1,0 +1,269 @@
+!! Custom Serializers in DRF
+- ways DRF allows you to extend and customize Serializers
+1. Adding custom fields - custom fields that are not directly mapped to model fields can be added
+2. Overriding default behaviour - default serialization and deserialization logic an be overriden to implement custom logic
+3. Handling complex data structures - serializers can handle nested data structures, such as one-to-many or many-to-many relationships
+
+# CODE - e.g of a customized serializer
+from rest_framework import serializers
+from .models import BlogPost, Comment
+
+class CommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.username', read_only = True)
+
+    class Meta:
+        model = Comment
+        field = ['id', 'content', 'author', 'author_name', 'created_at']
+
+- `CommentSerializer` includes a custom `author_name` field that displays the `username` of the comment's author
+
+! Validation in Serializers
+- Serializers can be used to validate incoming data before creating or updating model instances.
+- One can define custom validation rules by overriding the validate method in their serializer
+
+# CODE
+from rest_framework import serializers
+from .models import BlogPost
+
+class BlogPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogPost
+        fields = ['id', 'title', 'content', 'author', 'created_at']
+
+    def validate(self, data):
+        if len(data['title']) < 5:
+            raise serializers.ValidationError("Title must be at least 5 characters long")
+        return data
+
+- The validate method checks if the title field in the incoming data is at least 5 characters long. If the validation fails, a `ValidationError` is raiseed, which will be returned to the client in the response
+
+! Nested Serializers for Related Objects
+- Serializers can also be used to handle relationships btwn models, such as one-to-one or many-to-many relationships.
+- Achieved by nesting serializers within other serializers
+
+# CODE
+from rest_framework import serializers
+from .models import BlogPost, Comment
+
+class CommentSerializer(serilizers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ['id', 'content', 'author', 'created_at']
+
+class BlogPostSerializer(serializers.ModelSerializer):
+    comments = CommentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = BlogPost
+        fields = ['id', 'title', 'content', 'author', 'comments', 'created_at']
+
+- `BlogPostSerializer` includes a comments field that is a nested `CommentSerializer`. This allows the API to return the blog post data along with its related comments
+
+! Additional Resources
+1. Serializers - https://intranet.alxswe.com/rltoken/crI4OhAr0ifRyh2OfMvLyA
+2. Validators - https://intranet.alxswe.com/rltoken/0EQbXA3-f_MA7WlvaYq6tA
+3. Nested Relationships - https://intranet.alxswe.com/rltoken/dLoq3CmMg73hys3jvPgT0Q
+
+
+!! Custom Views with DRF Generics and Mixins
+
+Recap:
+- View: A func that takes a web request and returns a response. Basically a connection btwn the client and the server
+- Generic Views: Provided by REST framework. Allow you to build api views that map closely to db models
+- Mixins: Reusable pieces of code that add functionality to views instead of directly defining methods like .get() or .post()
+
+! Custom Views with DRF'S Generics
+- These are classes that encapsulate common patterns for CRUD operations
+- Provide default implementations for handling HTTP methods(GET, POST, PUT, PATCH, DELETE)
+- Abstract repetetive code and promote code reuse
+- To create custom views with DRF's generic view you need to define a class that inherits from the GenericAPIVew class. This class extends from the APIView class adding commonly required behaviour for standard list and detail views
+
+# CODE - e.g of custom view with generics
+from rest_framework import generics
+from .models import Book
+from .serializers import BookSerializer
+
+class CustomBookCreateView(generics.CreateAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+class CustomBookListView(generics.ListAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+! Custom Views with Mixins
+- Reusable components that can be combined with generic views to add specific behaviour such as authentication, permission checks or custom logic
+- Implementation requires creating a separate class for each mixin and then inheriting it within the class where its functionality is needed
+
+# CODE - utilizing the LoginRequiredMixin in a view
+from django.contrib.auth.mixins import LoginRequiredMixin
+class MyView(LoginRequiredMixin, View):
+    login_url = '/login/'
+    redirect_field_name = 'redirect_to'
+
+    def get(self, request):
+        # View logic here
+
+! Additional Resources
+1. Mixins - https://intranet.alxswe.com/rltoken/sYdQ1CbAT4H1K7H3cgk7iQ
+2. Generic Views - https://intranet.alxswe.com/rltoken/5pXHw1AdQC9L2LusDc6ReA
+3. DRF-Generic views -Video - https://intranet.alxswe.com/rltoken/bKdpR4U_P3QXS0lDmqxT0Q
+
+
+
+!! Filtering, Searching, and Ordering in DRF
+- Filtering: adding restrictions to a particular query set
+
+# Snippet
+return Users.objects.filter(role=Teachers)
+
+! Filtering
+- Simplest way to filter the queryset of any view that subclasses the `GenericApiView` is to override the `..get_queryset()` method.
+- This allows customization of the queryset returnedby the view in a number of diff ways
+e.g
+
+x filtering against a current user
+- Relevant when you want to get data relevant to the current authenticated users. It's done based on the value of `request.user`
+
+# CODE
+from myapp.models import Purchase
+from myapp.serializers import PurchaseSerializer
+from rest_framework import generics
+
+class PurchaseList(generics.ListAPIView):
+    serializer_class = PurchaseSerializer
+
+    def get_queryset(self):
+    # view returns a list of all the purchases for the currently authenticated user
+    user = self.request.user
+    return Purchase.objects.filter(purchaser=user)
+
+
+x filtering against login_url
+- Involves restricting the queryset based on some parts of the url
+- e.g if a URL configuration included an entry like:
+
+# Snippet
+re_path('^purchases/(?P<username>.+)/$', PurchaseList.as_view()),
+
+- One can create a view that filters the purchase queryset based on the username from the URL:
+
+# CODE
+class PurchaseList(generics.ListAPIView):
+    serializer_class = PurchaseSerializer
+
+    def get_queryset(self):
+        # returns a list of purchases for the user specified un the URL
+        username = self.kwargs['username']
+        return Purchase.objects.filter(purchaser__username=username)
+
+
+x Filtering against query parameters
+- Involves determining the initial queryset based on query parameters in the URL
+- e.g `.get_queryset()` can be override to handle URLs like 'http://example.com/api/purchases?username=denvercoder9' filtering the queryset only if the username parameter is present in the URL
+
+# CODE
+class PurchaseList(generics.ListAPIView):
+    serializer_class = PurchaseSerializer
+
+    def get_queryset(self):
+        # Optionally restricts the returned purchases to a specific user, by filtering based on the `username` query parameter in the URL
+        queryset = Purchase.objects.all()
+        username = self.request.query_params.get('username')
+        if username is not None:
+            queryset = queryset.filter(purchaser__username=username)
+        return queryset
+
+
+! Searching
+- DRF offers a filter called `SearchFilter` for queryset filtering based on a query parameter named 'search'
+- The class is only applied if the view has `searchfields` attribute set
+- The `searchfields` attribute should be a list of names of text type fields on the model, such as `CharField` or `TextField`
+
+# CODE
+from rest_framework import filters
+
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'email']
+
+- This allows the client to filter the items in the list by making queries such as:
+'http://example.com/api/users?search=russell'
+
+
+! Ordering
+- Important when it comes to controlling the order of results
+- Supported by the `OrderingFilter` class.
+e.g to order users by username:
+`bash http://example.com/api/users?ordering=username`
+
+- client may also specify reverse orderings by prefixing the field name with '-'
+e.g
+`bash http://example.com/api/users?ordering=-username`
+
+- Multiple orderings may also be specified:
+e.g
+`bash http://example.com/api/users?ordering=account,username`
+
+- It is recommended that you explicitly specify which fields the API should allow in the ordering filter. This can be done by setting an ordering_fields attribute on the view e.g
+
+# CODE
+class UserListView(generics.ListAPIView):
+    querset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['username', 'email']
+
+
+! Additional Resources
+1. Filtering - https://intranet.alxswe.com/rltoken/2Cr_t-kF0Ooge9fvauFWiQ
+2. Django REST API Tutorial - Filtering System - https://intranet.alxswe.com/rltoken/a-Njzk47GVMBtQcEvMv6-g
+
+
+
+!! Testing DRF APIs
+'code without tests is brocken as designed'
+
+! Testing in DRF: API Endpoints
+- Testing APIs is streamlined through utilization of rest_framework.test library
+- The library contains `APIRequestFactory` which mirrors Django's `RequestFactory` and facilitates the simulation of HTTP requests to API endpoints
+
+# Snippet
+from rest_framework.test import APIRequestFactory
+
+# Using the std RequestFactory API to create a form POST request
+factory = APIRequestFactory()
+request = factory.post('/notes/', {'title': 'new idea'})
+
+- The snippet illustrates how `APIRequestFactory` enables the testing of API endpoints such as the ability to create notes.
+- Methods like .get(), .put(), .patch(), .delete(), .head(), and .options() can be used for comprehensive testing of various HTTP methods
+
+
+! Unit Tests
+- Relies on the py standard library module `unittest`
+- By subclassing `django.test.TestCase` which extends `unittest.TestCase` devs can create test cases that run with a transactional environment, ensuring db isolation
+
+# CODE
+from django.test import TestCase
+from myapp.models import Animal
+
+class AnimalTestCase(TestCase):
+    def setUp(self):
+        Animal.objects.create(name="lion", sound="roar")
+        Animal.objects.create(name="cat", sound="meow")
+
+    def test_animals_can_speak(self):
+        # Animals that can speak are correctly identified
+        lion = Animal.objects.get(name="lion")
+        cat = Animal.objects.get(name="cat")
+        self.assertEqual(lion.speak(), 'The lion says "Roar"')
+        self.assertEqual(cat.speak(), 'The cat says "meow"')
+
+The code demontrates how unit tests can verfy the behaviour of models, ensuring that the expected actions produce desired outcomes
+
+! Additional Resources
+1. Test driven development of django restful api - https://intranet.alxswe.com/rltoken/F82Yr1IZ5ACP16EcB62n2A
+2. writing tests in django-unittests - https://intranet.alxswe.com/rltoken/AUDVSSTt8RFDCKl2eNA0xg
+3. Testing DRF - Testing DRF
