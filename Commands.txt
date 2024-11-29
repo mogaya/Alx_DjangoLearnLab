@@ -1,0 +1,14 @@
+!! pip
+pip freeze
+- Checks for installs
+
+!! Django
+django-admin startproject project_name
+- creates a project
+
+!! manage.py
+py manage.py runserver
+py manage.py startapp app_name
+py manage.py createsuperuser
+py manage.py makemigrations
+py manage.py migrate
