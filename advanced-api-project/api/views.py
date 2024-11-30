@@ -4,7 +4,8 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 from .models import Book
 from .serializers import BookSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django_filters.rest_framework import DjangoFilterBackend
+# from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework
 
 # Create your views here.
 # ListView - Retrieve all books.
@@ -15,7 +16,7 @@ class BookListView(generics.ListAPIView):
 
 
     # Add filtering, searching, and ordering backends
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = [rest_framework.DjangoFilterBackend, SearchFilter, OrderingFilter]
 
     # Filter by title, author name, and year
     filterset_fields =['title', 'author__name', 'publication_year']
