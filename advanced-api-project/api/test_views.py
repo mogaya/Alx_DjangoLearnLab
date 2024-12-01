@@ -1,26 +1,30 @@
-from django.urls import reverse
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
+from django.contrib.auth.models import User
 from rest_framework import status
 from .models import Book, Author
-from rest_framework.test import APIClient
-from django.contrib.auth.models import User
-
+from django.urls import reverse
 
 class BookAPITestCase(APITestCase):
     def setUp(self):
         # Set up initial data
         self.client = APIClient()
         self.user = User.objects.create_user(username="testuser", password="password")
-        self.client.force_authenticate(user=self.user)  # Authenticate the test client
+        
+        # Authenticate the client
+        self.client.force_authenticate(user=self.user)  # This line authenticates the client
 
+        # Create sample data for testing
         self.author = Author.objects.create(name="John Doe")
         self.book = Book.objects.create(
             title="Test Book",
             author=self.author,
             publication_year=2023
         )
-        self.list_url = reverse("book-list")
+
+        # Define the URLs for the API endpoints
+        self.list_url = reverse("book-list")  # Adjust to match your URL names
         self.detail_url = reverse("book-detail", kwargs={"pk": self.book.id})
+    
 
     def test_get_all_books(self):
         response = self.client.get(self.list_url)
