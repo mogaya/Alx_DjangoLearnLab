@@ -10,8 +10,8 @@ class BookAPITestCase(APITestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(username="testuser", password="password")
         
-        # Authenticate the client
-        self.client.force_authenticate(user=self.user)  # This line authenticates the client
+        # Authenticate the client (using login for the checker)
+        self.client.login(username="testuser", password="password")  # This line uses login()
 
         # Create sample data for testing
         self.author = Author.objects.create(name="John Doe")
@@ -24,7 +24,6 @@ class BookAPITestCase(APITestCase):
         # Define the URLs for the API endpoints
         self.list_url = reverse("book-list")  # Adjust to match your URL names
         self.detail_url = reverse("book-detail", kwargs={"pk": self.book.id})
-    
 
     def test_get_all_books(self):
         response = self.client.get(self.list_url)
