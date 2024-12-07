@@ -19,6 +19,6 @@ urlpatterns = [
     path('post', PostListView.as_view(), name='post-list'),  # /posts/
     path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),  # /posts/<id>/
     path('post/new/', PostCreateView.as_view(), name='post-create'),  # /posts/new/
-    path('post/<int:pk>/edit/', PostUpdateView.as_view(), name='post-update'),  # /posts/<id>/edit/
+    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),  # /posts/<id>/edit/
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
 ]
