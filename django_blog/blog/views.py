@@ -76,7 +76,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return self.request.user == post.author
     
 @login_required
-def add_comment(request, post_id):
+def CommentCreateView(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if request.method == "POST":
         form = CommentForm(request.POST)
@@ -88,7 +88,7 @@ def add_comment(request, post_id):
             return redirect('post_detail', pk=post_id)
     else:
         form = CommentForm()
-    return render(request, 'blog/add_comment.html', {'form': form, 'post': post})
+    return render(request, 'blog/CommentCreateView.html', {'form': form, 'post': post})
 
 @method_decorator(login_required, name='dispatch')
 class CommentUpdateView(UpdateView):
