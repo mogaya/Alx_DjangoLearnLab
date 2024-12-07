@@ -19,14 +19,14 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(template_name='blog/logout.html'), name='logout'),
 
     # Posts
-    path('post', PostListView.as_view(), name='post-list'),  # /posts/
-    path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),  # /posts/<id>/
-    path('post/new/', PostCreateView.as_view(), name='post-create'),  # /posts/new/
-    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),  # /posts/<id>/edit/
+    path('post', PostListView.as_view(), name='post-list'),  # /post/
+    path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),  # /post/<id>/
+    path('post/new/', PostCreateView.as_view(), name='post-create'),  # /post/new/
+    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),  # /post/<id>/edit/
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
 
     # Comments
-    path('posts/<int:post_id>/comment/new/', CommentCreateView, name='CommentCreateView'),
-    path('comment/<int:pk>/edit/', CommentUpdateView.as_view(), name='edit_comment'),
+    path('post/<int:post_id>/comment/new/', CommentCreateView, name='CommentCreateView'),
+    path('comment/<int:pk>/update/', CommentUpdateView.as_view(), name='edit_comment'),
     path('comment/<int:pk>/delete/', CommentDeleteView.as_view(), name='delete_comment'),
 ]
