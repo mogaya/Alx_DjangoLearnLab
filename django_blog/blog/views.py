@@ -11,6 +11,7 @@ from .models import Post, Comment
 from django.views.generic.edit import UpdateView, DeleteView
 from django.utils.decorators import method_decorator
 from .forms import CommentForm
+from django.db.models import Q
 
 # Create your views here.
 def register(request):
@@ -114,3 +115,17 @@ class CommentDeleteView(DeleteView):
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.filter(author=self.request.user)
+    
+def search_posts(request):
+    query = request.GET.get('q', '')
+    results = []
+    if query:
+        results = Post.objects.filter(
+            Q(title__icontains=query) | Q(content__icontains=query) | Q(tags__name__icontains=query)
+        ).distinct
+
+    return render(request, 'blog/search_results.html', {'query': query, 'results': results})
+
+def posts_by_tag(request, tag_name):
+    posts = Post.objects.filter(tags__name__iexact=tag_name)
+    return render(request, 'blog/posts_by_tag.html', {'tag_name': tag_name, 'posts': posts})

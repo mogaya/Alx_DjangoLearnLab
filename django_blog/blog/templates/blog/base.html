@@ -15,6 +15,10 @@
           <li><a href="">Blog Posts</a></li>
           <li><a href="">Login</a></li>
           <li><a href="">Register</a></li>
+          <form method="get" action="{% url 'search_posts' %}">
+            <input type="text" name="q" placeholder="Search blog posts..." />
+            <button type="submit">Search</button>
+          </form>
         </ul>
       </nav>
     </header>
