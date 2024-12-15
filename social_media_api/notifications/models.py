@@ -14,7 +14,9 @@ class Notification(models.Model):
     target_object_id = models.PositiveBigIntegerField(null=True)
     target = GenericForeignKey('target_content_type', 'target_object_id')
     created_at = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)
+    
 
     def __str__(self):
         return f"Notification for {self.recipient.username}: {self.verb}"
