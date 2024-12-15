@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status, permissions, generics
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -57,3 +57,12 @@ class UnfollowUserView(generics.GenericAPIView):
             return Response({"detail": "Unfollowed Successfully"}, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             return Response({"detail": "CustomUser not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+class UserListView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]  # To ensure the user is logged in
+
+    def get(self, request, *args, **kwargs):
+        # You can list all users or filter based on your needs
+        users = CustomUser.objects.all()  # Get all users
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
